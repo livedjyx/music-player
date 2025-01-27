@@ -152,35 +152,93 @@ const MusicPlayer: React.FC = () => {
   // 尝试播放音频
   const tryPlayAudio = async (audio: HTMLAudioElement) => {
     try {
-      // 确保音频已经加载
-      if (audio.readyState < 2) { // HAVE_CURRENT_DATA
-        await new Promise((resolve, reject) => {
-          const loadHandler = () => {
-            audio.removeEventListener('canplay', loadHandler);
-            audio.removeEventListener('error', errorHandler);
+      // 等待音频完全加载
+      await new Promise((resolve, reject) => {
+        if (audio.readyState >= 3) { // HAVE_FUTURE_DATA
+          resolve(true);
+          return;
+        }
+
+        const loadHandler = () => {
+          if (audio.readyState >= 3) {
+            cleanup();
             resolve(true);
-          };
-          const errorHandler = (e: Event) => {
-            audio.removeEventListener('canplay', loadHandler);
-            audio.removeEventListener('error', errorHandler);
-            reject(new Error('音频加载失败'));
-          };
-          audio.addEventListener('canplay', loadHandler);
-          audio.addEventListener('error', errorHandler);
-        });
+          }
+        };
+
+        const errorHandler = (e: Event) => {
+          cleanup();
+          reject(new Error('音频加载失败'));
+        };
+
+        const cleanup = () => {
+          audio.removeEventListener('canplay', loadHandler);
+          audio.removeEventListener('loadeddata', loadHandler);
+          audio.removeEventListener('error', errorHandler);
+        };
+
+        audio.addEventListener('canplay', loadHandler);
+        audio.addEventListener('loadeddata', loadHandler);
+        audio.addEventListener('error', errorHandler);
+      });
+
+      // 确保没有其他播放操作正在进行
+      if (audio.paused) {
+        await audio.play();
       }
-      
-      await audio.play();
       return true;
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        // 忽略中断错误，这通常是由用户操作导致的
+        return false;
+      }
       console.error('播放失败:', error);
       return false;
     }
   };
 
   // 切换歌曲
+  const changeSong = async (song: Song, shouldPlay: boolean = false) => {
+    if (!audioRef.current) return false;
+
+    try {
+      // 先暂停当前播放
+      audioRef.current.pause();
+      
+      // 更新音频源
+      audioRef.current.src = song.url;
+      audioRef.current.load();
+
+      // 更新状态
+      setPlayerState(prev => ({
+        ...prev,
+        currentSong: song,
+        progress: 0,
+        isPlaying: false // 先设置为暂停状态
+      }));
+
+      // 如果需要播放，等待加载完成后再播放
+      if (shouldPlay) {
+        const playSuccess = await tryPlayAudio(audioRef.current);
+        if (playSuccess) {
+          setPlayerState(prev => ({ ...prev, isPlaying: true }));
+          return true;
+        } else {
+          alert(`无法播放歌曲: ${song.title}`);
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error('切换歌曲失败:', error);
+      alert(`切换歌曲失败: ${song.title}`);
+      return false;
+    }
+  };
+
+  // 切换到下一首
   const handleNext = async () => {
-    if (!playerState.currentSong || !audioRef.current) return;
+    if (!playerState.currentSong) return;
     
     const currentIndex = defaultSongs.findIndex(
       song => song.id === playerState.currentSong?.id
@@ -195,47 +253,13 @@ const MusicPlayer: React.FC = () => {
       nextIndex = (currentIndex + 1) % defaultSongs.length;
     }
 
-    const nextSong = defaultSongs[nextIndex];
     const wasPlaying = playerState.isPlaying;
-
-    try {
-      // 更新音频源
-      audioRef.current.src = nextSong.url;
-      audioRef.current.load();
-
-      // 更新状态
-      setPlayerState(prev => ({
-        ...prev,
-        currentSong: nextSong,
-        progress: 0,
-        isPlaying: wasPlaying
-      }));
-
-      // 如果之前在播放，则继续播放
-      if (wasPlaying) {
-        const playSuccess = await tryPlayAudio(audioRef.current);
-        if (!playSuccess) {
-          setPlayerState(prev => ({ 
-            ...prev, 
-            isPlaying: false,
-            currentSong: nextSong // 保持当前歌曲，但停止播放
-          }));
-          alert(`无法播放歌曲: ${nextSong.title}`);
-        }
-      }
-    } catch (error) {
-      console.error('切换歌曲失败:', error);
-      setPlayerState(prev => ({ 
-        ...prev, 
-        isPlaying: false,
-        currentSong: nextSong // 保持当前歌曲，但停止播放
-      }));
-      alert(`切换歌曲失败: ${nextSong.title}`);
-    }
+    await changeSong(defaultSongs[nextIndex], wasPlaying);
   };
 
+  // 切换到上一首
   const handlePrev = async () => {
-    if (!playerState.currentSong || !audioRef.current) return;
+    if (!playerState.currentSong) return;
     
     const currentIndex = defaultSongs.findIndex(
       song => song.id === playerState.currentSong?.id
@@ -250,43 +274,8 @@ const MusicPlayer: React.FC = () => {
       prevIndex = (currentIndex - 1 + defaultSongs.length) % defaultSongs.length;
     }
 
-    const prevSong = defaultSongs[prevIndex];
     const wasPlaying = playerState.isPlaying;
-
-    try {
-      // 更新音频源
-      audioRef.current.src = prevSong.url;
-      audioRef.current.load();
-
-      // 更新状态
-      setPlayerState(prev => ({
-        ...prev,
-        currentSong: prevSong,
-        progress: 0,
-        isPlaying: wasPlaying
-      }));
-
-      // 如果之前在播放，则继续播放
-      if (wasPlaying) {
-        const playSuccess = await tryPlayAudio(audioRef.current);
-        if (!playSuccess) {
-          setPlayerState(prev => ({ 
-            ...prev, 
-            isPlaying: false,
-            currentSong: prevSong // 保持当前歌曲，但停止播放
-          }));
-          alert(`无法播放歌曲: ${prevSong.title}`);
-        }
-      }
-    } catch (error) {
-      console.error('切换歌曲失败:', error);
-      setPlayerState(prev => ({ 
-        ...prev, 
-        isPlaying: false,
-        currentSong: prevSong // 保持当前歌曲，但停止播放
-      }));
-      alert(`切换歌曲失败: ${prevSong.title}`);
-    }
+    await changeSong(defaultSongs[prevIndex], wasPlaying);
   };
 
   // 播放控制
@@ -301,14 +290,11 @@ const MusicPlayer: React.FC = () => {
         const playSuccess = await tryPlayAudio(audioRef.current);
         if (playSuccess) {
           setPlayerState(prev => ({ ...prev, isPlaying: true }));
-        } else {
-          alert(`无法播放歌曲: ${playerState.currentSong.title}`);
         }
       }
     } catch (error) {
       console.error('播放控制失败:', error);
       setPlayerState(prev => ({ ...prev, isPlaying: false }));
-      alert('播放控制失败，请稍后重试');
     }
   };
 
@@ -321,26 +307,26 @@ const MusicPlayer: React.FC = () => {
       setPlayerState(prev => ({
         ...prev,
         progress: audio.currentTime,
-        duration: audio.duration
+        duration: audio.duration || 0
       }));
     };
 
     const handleEnded = () => {
       if (playerState.playMode === PlayMode.REPEAT) {
         audio.currentTime = 0;
-        togglePlay();
+        tryPlayAudio(audio).catch(console.error);
       } else {
         handleNext();
       }
     };
 
     audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', updateProgress);
+    audio.addEventListener('durationchange', updateProgress);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateProgress);
-      audio.removeEventListener('loadedmetadata', updateProgress);
+      audio.removeEventListener('durationchange', updateProgress);
       audio.removeEventListener('ended', handleEnded);
     };
   }, [playerState.playMode]);
