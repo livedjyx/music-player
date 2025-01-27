@@ -1,3 +1,10 @@
+export enum PlayMode {
+  ORDER = 'order',
+  REPEAT = 'repeat',
+  REPEAT_ONE = 'repeat-one',
+  SHUFFLE = 'shuffle'
+}
+
 export interface Song {
   id: string;
   title: string;
@@ -6,8 +13,6 @@ export interface Song {
   cover?: string;
   lyrics?: string; // 歌词文本，格式为 "[00:00.00]歌词"
 }
-
-export type PlayMode = 'normal' | 'repeat' | 'repeat-one' | 'shuffle';
 
 export interface PlayerState {
   currentSong: Song | null;

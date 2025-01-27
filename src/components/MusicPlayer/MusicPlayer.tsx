@@ -134,230 +134,74 @@ const parseLyrics = (lyricsStr?: string): ParsedLyric[] => {
     .filter((lyric): lyric is ParsedLyric => lyric !== null);
 };
 
-export default function MusicPlayer() {
+const MusicPlayer: React.FC = () => {
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [playerState, setPlayerState] = useState<PlayerState>({
     currentSong: defaultSongs[0],
     isPlaying: false,
-    volume: 1,
     progress: 0,
     duration: 0,
-    playMode: 'normal',
+    volume: 1,
+    playMode: PlayMode.ORDER,
     showPlaylist: false,
     showLyrics: false
   });
-
-  const [currentLyric, setCurrentLyric] = useState<string>('');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [parsedLyrics, setParsedLyrics] = useState<ParsedLyric[]>([]);
+  const [currentLyric, setCurrentLyric] = useState<string>('');
 
-  // 更新歌词
-  useEffect(() => {
-    if (playerState.currentSong?.lyrics) {
-      setParsedLyrics(parseLyrics(playerState.currentSong.lyrics));
-    } else {
-      setParsedLyrics([]);
+  // 基本播放控制
+  const play = async () => {
+    if (!audioRef.current) return;
+    try {
+      await audioRef.current.play();
+      setPlayerState(prev => ({ ...prev, isPlaying: true }));
+    } catch (error) {
+      console.error('播放失败:', error);
+      setPlayerState(prev => ({ ...prev, isPlaying: false }));
     }
-  }, [playerState.currentSong]);
-
-  // 处理播放模式
-  const handlePlayModeChange = () => {
-    const modes: PlayMode[] = ['normal', 'repeat', 'repeat-one', 'shuffle'];
-    const currentIndex = modes.indexOf(playerState.playMode);
-    const nextMode = modes[(currentIndex + 1) % modes.length];
-    setPlayerState(prev => ({ ...prev, playMode: nextMode }));
   };
 
-  // 监听当前歌曲变化
-  useEffect(() => {
-    if (!audioRef.current || !playerState.currentSong) return;
+  const pause = () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    setPlayerState(prev => ({ ...prev, isPlaying: false }));
+  };
 
-    // 重置进度
-    audioRef.current.currentTime = 0;
-    
-    // 设置新的音频源
-    audioRef.current.src = playerState.currentSong.url;
-    
-    // 加载新的音频
-    audioRef.current.load();
-    
-    // 如果是播放状态，则开始播放
+  const togglePlay = () => {
     if (playerState.isPlaying) {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          setPlayerState(prev => ({ ...prev, isPlaying: false }));
-        });
-      }
+      pause();
+    } else {
+      play();
     }
-  }, [playerState.currentSong?.url]);
+  };
 
-  // 监听播放状态变化
-  useEffect(() => {
+  // 切换歌曲
+  const changeSong = (song: Song, autoplay: boolean = true) => {
     if (!audioRef.current) return;
 
-    if (playerState.isPlaying) {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          setPlayerState(prev => ({ ...prev, isPlaying: false }));
-        });
-      }
-    } else {
-      audioRef.current.pause();
-    }
-  }, [playerState.isPlaying]);
+    // 更新音频源
+    audioRef.current.src = song.url;
+    audioRef.current.load();
 
-  // 获取下一首歌
-  const getNextSong = useCallback(() => {
-    const currentIndex = defaultSongs.findIndex(song => song.id === playerState.currentSong?.id);
-    
-    switch (playerState.playMode) {
-      case 'repeat-one':
-        return playerState.currentSong;
-      case 'shuffle':
-        const randomIndex = Math.floor(Math.random() * defaultSongs.length);
-        return defaultSongs[randomIndex];
-      case 'repeat':
-      case 'normal':
-      default:
-        return defaultSongs[(currentIndex + 1) % defaultSongs.length];
-    }
-  }, [playerState.currentSong?.id, playerState.playMode]);
+    // 更新状态
+    setPlayerState(prev => ({
+      ...prev,
+      currentSong: song,
+      progress: 0,
+      isPlaying: autoplay
+    }));
 
-  // 获取上一首歌
-  const getPrevSong = useCallback(() => {
-    const currentIndex = defaultSongs.findIndex(song => song.id === playerState.currentSong?.id);
-    
-    switch (playerState.playMode) {
-      case 'repeat-one':
-        return playerState.currentSong;
-      case 'shuffle':
-        const randomIndex = Math.floor(Math.random() * defaultSongs.length);
-        return defaultSongs[randomIndex];
-      case 'repeat':
-      case 'normal':
-      default:
-        return defaultSongs[(currentIndex - 1 + defaultSongs.length) % defaultSongs.length];
-    }
-  }, [playerState.currentSong?.id, playerState.playMode]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      // 音频加载完成时的处理
-      const handleLoadedMetadata = () => {
-        setPlayerState(prev => ({
-          ...prev,
-          duration: audioRef.current?.duration || 0
-        }));
-
-        // 如果设置为播放状态，确保开始播放
-        if (playerState.isPlaying) {
-          audioRef.current?.play().catch(error => {
-            console.error('Error playing audio:', error);
-            setPlayerState(prev => ({ ...prev, isPlaying: false }));
-          });
-        }
+    // 如果需要自动播放，等待加载完成后播放
+    if (autoplay) {
+      const handleCanPlay = () => {
+        play();
+        audioRef.current?.removeEventListener('canplay', handleCanPlay);
       };
-
-      // 音频播放结束时的处理
-      const handleEnded = () => {
-        if (playerState.playMode === 'repeat') {
-          // 单曲循环模式
-          if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(error => {
-              console.error('Error replaying audio:', error);
-              setPlayerState(prev => ({ ...prev, isPlaying: false }));
-            });
-          }
-        } else {
-          // 其他模式下播放下一首
-          const nextSong = getNextSong();
-          if (nextSong) {
-            setPlayerState(prev => ({ 
-              ...prev, 
-              currentSong: nextSong,
-              isPlaying: true
-            }));
-          }
-        }
-      };
-
-      // 音频播放错误时的处理
-      const handleError = (e: Event) => {
-        console.error('Audio playback error:', e);
-        setPlayerState(prev => ({ ...prev, isPlaying: false }));
-      };
-
-      // 添加事件监听
-      audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
-      audioRef.current.addEventListener('ended', handleEnded);
-      audioRef.current.addEventListener('error', handleError);
-
-      // 清理事件监听
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
-          audioRef.current.removeEventListener('ended', handleEnded);
-          audioRef.current.removeEventListener('error', handleError);
-        }
-      };
+      audioRef.current.addEventListener('canplay', handleCanPlay);
     }
-  }, [playerState.currentSong, playerState.isPlaying, playerState.playMode]);
+  };
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const updateProgress = () => {
-      const currentTime = audio.currentTime;
-      setPlayerState(prev => ({
-        ...prev,
-        progress: currentTime,
-        duration: audio.duration
-      }));
-
-      // 更新当前歌词
-      const currentLyric = parsedLyrics.reduce((acc, lyric) => {
-        if (lyric.time <= currentTime) return lyric.text;
-        return acc;
-      }, '');
-      setCurrentLyric(currentLyric);
-    };
-
-    const handleError = (e: Event) => {
-      const error = (e.target as HTMLAudioElement).error;
-      console.error('Audio error:', error?.code, error?.message);
-      alert(`播放出错: ${error?.message || '未知错误'}`);
-    };
-
-    const handlePlay = () => {
-      console.log('Audio play event');
-      setPlayerState(prev => ({ ...prev, isPlaying: true }));
-    };
-
-    const handlePause = () => {
-      console.log('Audio pause event');
-      setPlayerState(prev => ({ ...prev, isPlaying: false }));
-    };
-
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', updateProgress);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-
-    return () => {
-      audio.removeEventListener('timeupdate', updateProgress);
-      audio.removeEventListener('loadedmetadata', updateProgress);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-    };
-  }, [playerState.playMode, getNextSong, parsedLyrics]);
-
+  // 下一首
   const handleNext = () => {
     if (!playerState.currentSong) return;
     
@@ -366,7 +210,7 @@ export default function MusicPlayer() {
     );
     
     let nextIndex;
-    if (playerState.playMode === 'shuffle') {
+    if (playerState.playMode === PlayMode.SHUFFLE) {
       do {
         nextIndex = Math.floor(Math.random() * defaultSongs.length);
       } while (nextIndex === currentIndex && defaultSongs.length > 1);
@@ -375,15 +219,10 @@ export default function MusicPlayer() {
     }
 
     const wasPlaying = playerState.isPlaying;
-    
-    setPlayerState(prev => ({
-      ...prev,
-      currentSong: defaultSongs[nextIndex],
-      progress: 0,
-      isPlaying: wasPlaying
-    }));
+    changeSong(defaultSongs[nextIndex], wasPlaying);
   };
 
+  // 上一首
   const handlePrev = () => {
     if (!playerState.currentSong) return;
     
@@ -392,7 +231,7 @@ export default function MusicPlayer() {
     );
     
     let prevIndex;
-    if (playerState.playMode === 'shuffle') {
+    if (playerState.playMode === PlayMode.SHUFFLE) {
       do {
         prevIndex = Math.floor(Math.random() * defaultSongs.length);
       } while (prevIndex === currentIndex && defaultSongs.length > 1);
@@ -401,31 +240,132 @@ export default function MusicPlayer() {
     }
 
     const wasPlaying = playerState.isPlaying;
-    
-    setPlayerState(prev => ({
-      ...prev,
-      currentSong: defaultSongs[prevIndex],
-      progress: 0,
-      isPlaying: wasPlaying
-    }));
+    changeSong(defaultSongs[prevIndex], wasPlaying);
   };
 
-  const togglePlay = () => {
-    if (!playerState.currentSong) return;
+  // 监听播放进度
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateProgress = () => {
+      setPlayerState(prev => ({
+        ...prev,
+        progress: audio.currentTime,
+        duration: audio.duration
+      }));
+    };
+
+    const handleEnded = () => {
+      if (playerState.playMode === PlayMode.REPEAT) {
+        audio.currentTime = 0;
+        play();
+      } else {
+        handleNext();
+      }
+    };
+
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', updateProgress);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('loadedmetadata', updateProgress);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [playerState.playMode]);
+
+  // 监听播放状态变化
+  useEffect(() => {
+    if (!audioRef.current) return;
     
-    setPlayerState(prev => ({
-      ...prev,
-      isPlaying: !prev.isPlaying
-    }));
+    if (playerState.isPlaying) {
+      play();
+    } else {
+      pause();
+    }
+  }, [playerState.isPlaying]);
+
+  // 监听当前歌曲变化
+  useEffect(() => {
+    if (!playerState.currentSong) return;
+    setParsedLyrics(parseLyrics(playerState.currentSong.lyrics));
+  }, [playerState.currentSong]);
+
+  // 监听歌词变化
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateLyric = () => {
+      const currentLyric = parsedLyrics.reduce((acc, lyric) => {
+        if (lyric.time <= audio.currentTime) return lyric.text;
+        return acc;
+      }, '');
+      setCurrentLyric(currentLyric);
+    };
+
+    audio.addEventListener('timeupdate', updateLyric);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateLyric);
+    };
+  }, [parsedLyrics]);
+
+  // 处理播放模式
+  const handlePlayModeChange = () => {
+    const modes: PlayMode[] = [PlayMode.ORDER, PlayMode.REPEAT, PlayMode.REPEAT_ONE, PlayMode.SHUFFLE];
+    const currentIndex = modes.indexOf(playerState.playMode);
+    const nextMode = modes[(currentIndex + 1) % modes.length];
+    setPlayerState(prev => ({ ...prev, playMode: nextMode }));
   };
+
+  // 获取下一首歌
+  const getNextSong = useCallback(() => {
+    if (!playerState.currentSong) return null;
+    
+    const currentIndex = defaultSongs.findIndex(song => song.id === playerState.currentSong?.id);
+    
+    switch (playerState.playMode) {
+      case PlayMode.REPEAT_ONE:
+        return playerState.currentSong;
+      case PlayMode.SHUFFLE:
+        const randomIndex = Math.floor(Math.random() * defaultSongs.length);
+        return defaultSongs[randomIndex];
+      case PlayMode.REPEAT:
+      case PlayMode.ORDER:
+      default:
+        return defaultSongs[(currentIndex + 1) % defaultSongs.length];
+    }
+  }, [playerState.currentSong, playerState.playMode]);
+
+  // 获取上一首歌
+  const getPrevSong = useCallback(() => {
+    if (!playerState.currentSong) return null;
+    
+    const currentIndex = defaultSongs.findIndex(song => song.id === playerState.currentSong?.id);
+    
+    switch (playerState.playMode) {
+      case PlayMode.REPEAT_ONE:
+        return playerState.currentSong;
+      case PlayMode.SHUFFLE:
+        const randomIndex = Math.floor(Math.random() * defaultSongs.length);
+        return defaultSongs[randomIndex];
+      case PlayMode.REPEAT:
+      case PlayMode.ORDER:
+      default:
+        return defaultSongs[(currentIndex - 1 + defaultSongs.length) % defaultSongs.length];
+    }
+  }, [playerState.currentSong, playerState.playMode]);
 
   const getPlayModeIcon = () => {
     switch (playerState.playMode) {
-      case 'shuffle':
+      case PlayMode.SHUFFLE:
         return <FaRandom />;
-      case 'repeat-one':
+      case PlayMode.REPEAT_ONE:
         return <FaRedoAlt className="relative"><span className="absolute text-xs">1</span></FaRedoAlt>;
-      case 'repeat':
+      case PlayMode.REPEAT:
         return <FaRedoAlt />;
       default:
         return <FaRedoAlt className="opacity-50" />;
@@ -616,7 +556,10 @@ export default function MusicPlayer() {
         ref={audioRef}
         src={playerState.currentSong?.url}
         preload="metadata"
+        volume={playerState.volume}
       />
     </div>
   );
-}
+};
+
+export default MusicPlayer;
