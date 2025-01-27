@@ -202,36 +202,42 @@ const MusicPlayer: React.FC = () => {
     if (!audioRef.current) return false;
 
     try {
-      // 先暂停当前播放
-      audioRef.current.pause();
+      const audio = audioRef.current;
       
-      // 更新音频源
-      audioRef.current.src = song.url;
-      audioRef.current.load();
-
-      // 更新状态
+      // 更新状态（保持播放状态）
       setPlayerState(prev => ({
         ...prev,
         currentSong: song,
         progress: 0,
-        isPlaying: false // 先设置为暂停状态
+        isPlaying: shouldPlay // 保持之前的播放状态
       }));
 
-      // 如果需要播放，等待加载完成后再播放
+      // 更新音频源并加载
+      audio.src = song.url;
+      await new Promise((resolve) => {
+        const loadHandler = () => {
+          audio.removeEventListener('loadeddata', loadHandler);
+          resolve(true);
+        };
+        audio.addEventListener('loadeddata', loadHandler);
+        audio.load();
+      });
+
+      // 如果需要播放，等待加载完成后立即播放
       if (shouldPlay) {
-        const playSuccess = await tryPlayAudio(audioRef.current);
-        if (playSuccess) {
-          setPlayerState(prev => ({ ...prev, isPlaying: true }));
+        try {
+          await audio.play();
           return true;
-        } else {
-          alert(`无法播放歌曲: ${song.title}`);
+        } catch (error) {
+          console.error('播放失败:', error);
+          setPlayerState(prev => ({ ...prev, isPlaying: false }));
           return false;
         }
       }
       return true;
     } catch (error) {
       console.error('切换歌曲失败:', error);
-      alert(`切换歌曲失败: ${song.title}`);
+      setPlayerState(prev => ({ ...prev, isPlaying: false }));
       return false;
     }
   };
@@ -253,8 +259,7 @@ const MusicPlayer: React.FC = () => {
       nextIndex = (currentIndex + 1) % defaultSongs.length;
     }
 
-    const wasPlaying = playerState.isPlaying;
-    await changeSong(defaultSongs[nextIndex], wasPlaying);
+    await changeSong(defaultSongs[nextIndex], playerState.isPlaying);
   };
 
   // 切换到上一首
@@ -274,8 +279,7 @@ const MusicPlayer: React.FC = () => {
       prevIndex = (currentIndex - 1 + defaultSongs.length) % defaultSongs.length;
     }
 
-    const wasPlaying = playerState.isPlaying;
-    await changeSong(defaultSongs[prevIndex], wasPlaying);
+    await changeSong(defaultSongs[prevIndex], playerState.isPlaying);
   };
 
   // 播放控制
@@ -283,14 +287,14 @@ const MusicPlayer: React.FC = () => {
     if (!audioRef.current || !playerState.currentSong) return;
 
     try {
+      const audio = audioRef.current;
+      
       if (playerState.isPlaying) {
-        audioRef.current.pause();
+        audio.pause();
         setPlayerState(prev => ({ ...prev, isPlaying: false }));
       } else {
-        const playSuccess = await tryPlayAudio(audioRef.current);
-        if (playSuccess) {
-          setPlayerState(prev => ({ ...prev, isPlaying: true }));
-        }
+        await audio.play();
+        setPlayerState(prev => ({ ...prev, isPlaying: true }));
       }
     } catch (error) {
       console.error('播放控制失败:', error);
@@ -311,10 +315,15 @@ const MusicPlayer: React.FC = () => {
       }));
     };
 
-    const handleEnded = () => {
+    const handleEnded = async () => {
       if (playerState.playMode === PlayMode.REPEAT) {
         audio.currentTime = 0;
-        tryPlayAudio(audio).catch(console.error);
+        try {
+          await audio.play();
+        } catch (error) {
+          console.error('重复播放失败:', error);
+          setPlayerState(prev => ({ ...prev, isPlaying: false }));
+        }
       } else {
         handleNext();
       }
