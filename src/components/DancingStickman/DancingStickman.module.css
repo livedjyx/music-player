@@ -1,9 +1,9 @@
 .stickmanContainer {
   position: fixed;
-  bottom: 120px;
-  right: 40px;
   z-index: 50;
   transform-origin: bottom center;
+  transition: all 0.05s linear;
+  pointer-events: none;
 }
 
 .dancing {
@@ -22,9 +22,27 @@
   stroke-linecap: round;
 }
 
+.neonFill {
+  fill: #00ffff;
+  filter: drop-shadow(0 0 2px #00ffff)
+          drop-shadow(0 0 4px #00ffff);
+}
+
+.neonTrail {
+  fill: none;
+  stroke: #00ffff;
+  stroke-width: 1;
+  opacity: 0.5;
+  animation: trailFade 1s infinite;
+}
+
 .arms, .legs {
   transform-origin: center;
   animation: glow 1s infinite alternate;
+}
+
+.trail {
+  animation: trailRotate 2s linear infinite;
 }
 
 @keyframes bounce {
@@ -45,5 +63,25 @@
     filter: drop-shadow(0 0 4px #00ffff)
             drop-shadow(0 0 8px #00ffff)
             drop-shadow(0 0 12px #00ffff);
+  }
+}
+
+@keyframes trailFade {
+  0% {
+    opacity: 0.8;
+    stroke-width: 1;
+  }
+  100% {
+    opacity: 0;
+    stroke-width: 0.2;
+  }
+}
+
+@keyframes trailRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
