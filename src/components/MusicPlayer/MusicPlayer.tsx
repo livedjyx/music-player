@@ -149,61 +149,9 @@ const MusicPlayer: React.FC = () => {
   const [parsedLyrics, setParsedLyrics] = useState<ParsedLyric[]>([]);
   const [currentLyric, setCurrentLyric] = useState<string>('');
 
-  // 基本播放控制
-  const play = async () => {
-    if (!audioRef.current) return;
-    try {
-      await audioRef.current.play();
-      setPlayerState(prev => ({ ...prev, isPlaying: true }));
-    } catch (error) {
-      console.error('播放失败:', error);
-      setPlayerState(prev => ({ ...prev, isPlaying: false }));
-    }
-  };
-
-  const pause = () => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    setPlayerState(prev => ({ ...prev, isPlaying: false }));
-  };
-
-  const togglePlay = () => {
-    if (playerState.isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  };
-
   // 切换歌曲
-  const changeSong = (song: Song, autoplay: boolean = true) => {
-    if (!audioRef.current) return;
-
-    // 更新音频源
-    audioRef.current.src = song.url;
-    audioRef.current.load();
-
-    // 更新状态
-    setPlayerState(prev => ({
-      ...prev,
-      currentSong: song,
-      progress: 0,
-      isPlaying: autoplay
-    }));
-
-    // 如果需要自动播放，等待加载完成后播放
-    if (autoplay) {
-      const handleCanPlay = () => {
-        play();
-        audioRef.current?.removeEventListener('canplay', handleCanPlay);
-      };
-      audioRef.current.addEventListener('canplay', handleCanPlay);
-    }
-  };
-
-  // 下一首
-  const handleNext = () => {
-    if (!playerState.currentSong) return;
+  const handleNext = async () => {
+    if (!playerState.currentSong || !audioRef.current) return;
     
     const currentIndex = defaultSongs.findIndex(
       song => song.id === playerState.currentSong?.id
@@ -218,13 +166,34 @@ const MusicPlayer: React.FC = () => {
       nextIndex = (currentIndex + 1) % defaultSongs.length;
     }
 
+    const nextSong = defaultSongs[nextIndex];
     const wasPlaying = playerState.isPlaying;
-    changeSong(defaultSongs[nextIndex], wasPlaying);
+
+    // 更新音频源
+    audioRef.current.src = nextSong.url;
+    audioRef.current.load();
+
+    // 更新状态
+    setPlayerState(prev => ({
+      ...prev,
+      currentSong: nextSong,
+      progress: 0,
+      isPlaying: wasPlaying
+    }));
+
+    // 如果之前在播放，则继续播放
+    if (wasPlaying) {
+      try {
+        await audioRef.current.play();
+      } catch (error) {
+        console.error('播放失败:', error);
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      }
+    }
   };
 
-  // 上一首
-  const handlePrev = () => {
-    if (!playerState.currentSong) return;
+  const handlePrev = async () => {
+    if (!playerState.currentSong || !audioRef.current) return;
     
     const currentIndex = defaultSongs.findIndex(
       song => song.id === playerState.currentSong?.id
@@ -239,8 +208,48 @@ const MusicPlayer: React.FC = () => {
       prevIndex = (currentIndex - 1 + defaultSongs.length) % defaultSongs.length;
     }
 
+    const prevSong = defaultSongs[prevIndex];
     const wasPlaying = playerState.isPlaying;
-    changeSong(defaultSongs[prevIndex], wasPlaying);
+
+    // 更新音频源
+    audioRef.current.src = prevSong.url;
+    audioRef.current.load();
+
+    // 更新状态
+    setPlayerState(prev => ({
+      ...prev,
+      currentSong: prevSong,
+      progress: 0,
+      isPlaying: wasPlaying
+    }));
+
+    // 如果之前在播放，则继续播放
+    if (wasPlaying) {
+      try {
+        await audioRef.current.play();
+      } catch (error) {
+        console.error('播放失败:', error);
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      }
+    }
+  };
+
+  // 播放控制
+  const togglePlay = async () => {
+    if (!audioRef.current || !playerState.currentSong) return;
+
+    try {
+      if (playerState.isPlaying) {
+        audioRef.current.pause();
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      } else {
+        await audioRef.current.play();
+        setPlayerState(prev => ({ ...prev, isPlaying: true }));
+      }
+    } catch (error) {
+      console.error('播放控制失败:', error);
+      setPlayerState(prev => ({ ...prev, isPlaying: false }));
+    }
   };
 
   // 监听播放进度
@@ -259,7 +268,7 @@ const MusicPlayer: React.FC = () => {
     const handleEnded = () => {
       if (playerState.playMode === PlayMode.REPEAT) {
         audio.currentTime = 0;
-        play();
+        togglePlay();
       } else {
         handleNext();
       }
@@ -275,17 +284,6 @@ const MusicPlayer: React.FC = () => {
       audio.removeEventListener('ended', handleEnded);
     };
   }, [playerState.playMode]);
-
-  // 监听播放状态变化
-  useEffect(() => {
-    if (!audioRef.current) return;
-    
-    if (playerState.isPlaying) {
-      play();
-    } else {
-      pause();
-    }
-  }, [playerState.isPlaying]);
 
   // 监听当前歌曲变化
   useEffect(() => {
