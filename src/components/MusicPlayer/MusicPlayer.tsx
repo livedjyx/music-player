@@ -202,6 +202,70 @@ export default function MusicPlayer() {
   }, [playerState.currentSong?.id, playerState.playMode]);
 
   useEffect(() => {
+    if (audioRef.current) {
+      // 音频加载完成时的处理
+      const handleLoadedMetadata = () => {
+        setPlayerState(prev => ({
+          ...prev,
+          duration: audioRef.current?.duration || 0
+        }));
+
+        // 如果设置为播放状态，确保开始播放
+        if (playerState.isPlaying) {
+          audioRef.current?.play().catch(error => {
+            console.error('Error playing audio:', error);
+            setPlayerState(prev => ({ ...prev, isPlaying: false }));
+          });
+        }
+      };
+
+      // 音频播放结束时的处理
+      const handleEnded = () => {
+        if (playerState.playMode === 'repeat') {
+          // 单曲循环模式
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(error => {
+              console.error('Error replaying audio:', error);
+              setPlayerState(prev => ({ ...prev, isPlaying: false }));
+            });
+          }
+        } else {
+          // 其他模式下播放下一首
+          const nextSong = getNextSong();
+          if (nextSong) {
+            setPlayerState(prev => ({ 
+              ...prev, 
+              currentSong: nextSong,
+              isPlaying: true
+            }));
+          }
+        }
+      };
+
+      // 音频播放错误时的处理
+      const handleError = (e: Event) => {
+        console.error('Audio playback error:', e);
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      };
+
+      // 添加事件监听
+      audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audioRef.current.addEventListener('ended', handleEnded);
+      audioRef.current.addEventListener('error', handleError);
+
+      // 清理事件监听
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
+          audioRef.current.removeEventListener('ended', handleEnded);
+          audioRef.current.removeEventListener('error', handleError);
+        }
+      };
+    }
+  }, [playerState.currentSong, playerState.isPlaying, playerState.playMode]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -237,29 +301,11 @@ export default function MusicPlayer() {
       setPlayerState(prev => ({ ...prev, isPlaying: false }));
     };
 
-    const handleEnded = () => {
-      console.log('Audio ended event');
-      if (playerState.playMode === 'repeat-one') {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        const nextSong = getNextSong();
-        if (nextSong) {
-          setPlayerState(prev => ({ 
-            ...prev, 
-            currentSong: nextSong,
-            isPlaying: true
-          }));
-        }
-      }
-    };
-
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateProgress);
     audio.addEventListener('error', handleError);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateProgress);
@@ -267,7 +313,6 @@ export default function MusicPlayer() {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
     };
   }, [playerState.playMode, getNextSong, parsedLyrics]);
 
@@ -290,24 +335,76 @@ export default function MusicPlayer() {
   };
 
   const handleNext = () => {
-    const nextSong = getNextSong();
-    if (nextSong) {
-      setPlayerState(prev => ({ 
-        ...prev, 
-        currentSong: nextSong,
-        isPlaying: true
-      }));
+    if (!playerState.currentSong) return;
+    
+    const currentIndex = defaultSongs.findIndex(
+      song => song.id === playerState.currentSong?.id
+    );
+    
+    let nextIndex;
+    if (playerState.playMode === 'shuffle') {
+      // 随机模式下，随机选择一首不同的歌
+      do {
+        nextIndex = Math.floor(Math.random() * defaultSongs.length);
+      } while (nextIndex === currentIndex && defaultSongs.length > 1);
+    } else {
+      // 顺序播放或循环模式下，选择下一首歌
+      nextIndex = (currentIndex + 1) % defaultSongs.length;
+    }
+    
+    // 保持当前的播放状态
+    const wasPlaying = playerState.isPlaying;
+    
+    setPlayerState(prev => ({
+      ...prev,
+      currentSong: defaultSongs[nextIndex],
+      progress: 0,
+      isPlaying: wasPlaying // 保持播放状态不变
+    }));
+
+    // 如果正在播放，确保新的音频开始播放
+    if (wasPlaying && audioRef.current) {
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      });
     }
   };
 
   const handlePrev = () => {
-    const prevSong = getPrevSong();
-    if (prevSong) {
-      setPlayerState(prev => ({ 
-        ...prev, 
-        currentSong: prevSong,
-        isPlaying: true
-      }));
+    if (!playerState.currentSong) return;
+    
+    const currentIndex = defaultSongs.findIndex(
+      song => song.id === playerState.currentSong?.id
+    );
+    
+    let prevIndex;
+    if (playerState.playMode === 'shuffle') {
+      // 随机模式下，随机选择一首不同的歌
+      do {
+        prevIndex = Math.floor(Math.random() * defaultSongs.length);
+      } while (prevIndex === currentIndex && defaultSongs.length > 1);
+    } else {
+      // 顺序播放或循环模式下，选择上一首歌
+      prevIndex = (currentIndex - 1 + defaultSongs.length) % defaultSongs.length;
+    }
+    
+    // 保持当前的播放状态
+    const wasPlaying = playerState.isPlaying;
+    
+    setPlayerState(prev => ({
+      ...prev,
+      currentSong: defaultSongs[prevIndex],
+      progress: 0,
+      isPlaying: wasPlaying // 保持播放状态不变
+    }));
+
+    // 如果正在播放，确保新的音频开始播放
+    if (wasPlaying && audioRef.current) {
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      });
     }
   };
 
