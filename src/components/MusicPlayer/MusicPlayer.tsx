@@ -328,22 +328,22 @@ export default function MusicPlayer() {
       {/* 播放列表 */}
       {playerState.showPlaylist && (
         <div className="absolute bottom-full w-full">
-          <div className="max-w-4xl mx-auto glass rounded-t-xl p-4 shadow-2xl">
+          <div className="max-w-4xl mx-auto cyber-box rounded-t-xl p-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold gradient-text">播放列表</h3>
+              <h3 className="text-xl font-bold neon-text">播放列表</h3>
               <button
                 onClick={() => setPlayerState(prev => ({ ...prev, showPlaylist: false }))}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                <FaTimes />
+                <FaTimes className="text-cyan-400" />
               </button>
             </div>
             <div className="space-y-2">
               {defaultSongs.map(song => (
                 <div
                   key={song.id}
-                  className={`flex items-center p-2 hover:bg-white/10 cursor-pointer rounded-lg transition-all hover-scale ${
-                    song.id === playerState.currentSong?.id ? 'bg-white/20' : ''
+                  className={`flex items-center p-2 hover:bg-white/10 cursor-pointer rounded-lg transition-all hover:scale-105 ${
+                    song.id === playerState.currentSong?.id ? 'cyber-box bg-opacity-50' : ''
                   }`}
                   onClick={() => {
                     setPlayerState(prev => ({ 
@@ -355,8 +355,8 @@ export default function MusicPlayer() {
                 >
                   <img src={song.cover} alt={song.title} className="w-12 h-12 rounded-lg mr-3 object-cover" />
                   <div>
-                    <div className="font-medium">{song.title}</div>
-                    <div className="text-sm text-gray-400">{song.artist}</div>
+                    <div className="font-medium cyber-gradient">{song.title}</div>
+                    <div className="text-sm text-cyan-400">{song.artist}</div>
                   </div>
                 </div>
               ))}
@@ -368,14 +368,14 @@ export default function MusicPlayer() {
       {/* 歌词显示 */}
       {playerState.showLyrics && (
         <div className="absolute bottom-full w-full">
-          <div className="max-w-4xl mx-auto glass rounded-t-xl p-4 shadow-2xl">
+          <div className="max-w-4xl mx-auto cyber-box rounded-t-xl p-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold gradient-text">歌词</h3>
+              <h3 className="text-xl font-bold neon-text">歌词</h3>
               <button
                 onClick={() => setPlayerState(prev => ({ ...prev, showLyrics: false }))}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                <FaTimes />
+                <FaTimes className="text-cyan-400" />
               </button>
             </div>
             <div className="text-center space-y-2 max-h-64 overflow-y-auto">
@@ -384,8 +384,8 @@ export default function MusicPlayer() {
                   key={index}
                   className={`py-1 transition-all ${
                     lyric.text === currentLyric 
-                      ? 'text-blue-400 font-bold scale-110' 
-                      : 'text-gray-400'
+                      ? 'neon-text scale-110' 
+                      : 'text-cyan-400'
                   }`}
                 >
                   {lyric.text}
@@ -396,7 +396,7 @@ export default function MusicPlayer() {
         </div>
       )}
 
-      <div className="glass backdrop-blur-md shadow-2xl">
+      <div className="cyber-box backdrop-blur-md">
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center justify-between">
             {/* Song Info */}
@@ -405,14 +405,14 @@ export default function MusicPlayer() {
                 <img
                   src={playerState.currentSong.cover}
                   alt={playerState.currentSong.title}
-                  className="w-16 h-16 rounded-lg shadow-lg hover-scale"
+                  className="w-16 h-16 rounded-lg shadow-lg hover:scale-105 transition-transform cyber-box p-1"
                 />
               )}
               <div>
-                <h3 className="font-semibold text-lg gradient-text">
+                <h3 className="font-semibold text-lg neon-text">
                   {playerState.currentSong?.title || 'No song selected'}
                 </h3>
-                <p className="text-gray-400">{playerState.currentSong?.artist}</p>
+                <p className="text-cyan-400">{playerState.currentSong?.artist}</p>
               </div>
             </div>
 
@@ -420,39 +420,42 @@ export default function MusicPlayer() {
             <div className="flex items-center space-x-6">
               <button
                 onClick={handlePlayModeChange}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-cyan-400"
                 title={`当前模式: ${playerState.playMode}`}
               >
                 {getPlayModeIcon()}
               </button>
               <button
                 onClick={handlePrev}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-cyan-400"
               >
                 <FaStepBackward />
               </button>
               <button
                 onClick={togglePlay}
-                className="p-4 hover:bg-white/10 rounded-full transition-colors"
+                className="p-4 cyber-box rounded-full hover:scale-110 transition-all"
               >
-                {playerState.isPlaying ? <FaPause className="text-xl" /> : <FaPlay className="text-xl" />}
+                {playerState.isPlaying ? 
+                  <FaPause className="text-xl text-cyan-400" /> : 
+                  <FaPlay className="text-xl text-cyan-400" />
+                }
               </button>
               <button
                 onClick={handleNext}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-cyan-400"
               >
                 <FaStepForward />
               </button>
               <button
                 onClick={() => setPlayerState(prev => ({ ...prev, showPlaylist: !prev.showPlaylist }))}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-cyan-400"
                 title="播放列表"
               >
                 <FaList />
               </button>
               <button
                 onClick={() => setPlayerState(prev => ({ ...prev, showLyrics: !prev.showLyrics }))}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-cyan-400"
                 title="歌词"
               >
                 <FaMusic />
@@ -461,7 +464,7 @@ export default function MusicPlayer() {
 
             {/* Volume */}
             <div className="flex items-center space-x-2">
-              <FaVolumeUp className="text-gray-400" />
+              <FaVolumeUp className="text-cyan-400" />
               <input
                 type="range"
                 min="0"
@@ -475,22 +478,22 @@ export default function MusicPlayer() {
                     audioRef.current.volume = newVolume;
                   }
                 }}
-                className="w-24"
+                className="w-24 accent-cyan-400"
               />
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="mt-4">
-            <div className="bg-gray-700 h-1 rounded-full overflow-hidden">
+            <div className="bg-gray-700 h-1 rounded-full overflow-hidden cyber-box">
               <div
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-1 rounded-full transition-all"
+                className="h-1 rounded-full transition-all cyber-gradient"
                 style={{
                   width: `${(playerState.progress / playerState.duration) * 100}%`
                 }}
               />
             </div>
-            <div className="flex justify-between text-sm mt-1 text-gray-400">
+            <div className="flex justify-between text-sm mt-1 text-cyan-400">
               <span>{Math.floor(playerState.progress)}s</span>
               <span>{Math.floor(playerState.duration)}s</span>
             </div>

@@ -6,6 +6,8 @@
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 0, 0, 0;
   --background-end-rgb: 0, 0, 0;
+  --neon-text-color: #f81ce5;
+  --neon-border-color: #08f;
 }
 
 body {
@@ -21,6 +23,16 @@ body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+  background-color: #000;
+  background-image: 
+    linear-gradient(0deg, transparent 24%, 
+      rgba(32, 255, 255, 0.05) 25%,
+      rgba(32, 255, 255, 0.05) 26%, transparent 27%, transparent 74%,
+      rgba(32, 255, 255, 0.05) 75%, rgba(32, 255, 255, 0.05) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, 
+      rgba(32, 255, 255, 0.05) 25%, rgba(32, 255, 255, 0.05) 26%, transparent 27%, transparent 74%,
+      rgba(32, 255, 255, 0.05) 75%, rgba(32, 255, 255, 0.05) 76%, transparent 77%, transparent);
+  background-size: 50px 50px;
 }
 
 /* 添加毛玻璃效果 */
@@ -76,20 +88,180 @@ body {
   }
 }
 
+/* 添加赛博朋克风格的全局样式 */
+@keyframes flicker {
+  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+    opacity: 0.99;
+    filter: drop-shadow(0 0 1px rgba(252, 211, 77, 0.5))
+           drop-shadow(0 0 15px rgba(245, 158, 11, 0.5))
+           drop-shadow(0 0 1px rgba(252, 211, 77, 0.5));
+  }
+  20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+    opacity: 0.4;
+    filter: none;
+  }
+}
+
+@keyframes glitch {
+  0% {
+    clip-path: polygon(0 2%, 100% 2%, 100% 5%, 0 5%);
+    transform: translate(0);
+  }
+  2% {
+    clip-path: polygon(0 15%, 100% 15%, 100% 15%, 0 15%);
+    transform: translate(-5px);
+  }
+  4% {
+    clip-path: polygon(0 10%, 100% 10%, 100% 20%, 0 20%);
+    transform: translate(5px);
+  }
+  6% {
+    clip-path: polygon(0 1%, 100% 1%, 100% 2%, 0 2%);
+    transform: translate(-5px);
+  }
+  8% {
+    clip-path: polygon(0 33%, 100% 33%, 100% 33%, 0 33%);
+    transform: translate(0);
+  }
+  10% {
+    clip-path: polygon(0 44%, 100% 44%, 100% 44%, 0 44%);
+    transform: translate(5px);
+  }
+  12% {
+    clip-path: polygon(0 50%, 100% 50%, 100% 20%, 0 20%);
+    transform: translate(-5px);
+  }
+  14% {
+    clip-path: polygon(0 70%, 100% 70%, 100% 70%, 0 70%);
+    transform: translate(0);
+  }
+  16% {
+    clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+    transform: translate(5px);
+  }
+  18% {
+    clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+    transform: translate(-5px);
+  }
+  20% {
+    clip-path: polygon(0 70%, 100% 70%, 100% 80%, 0 80%);
+    transform: translate(0);
+  }
+}
+
+@keyframes neon-border {
+  0%, 100% {
+    box-shadow: 0 0 5px #ff00ff,
+                0 0 10px #ff00ff,
+                0 0 20px #ff00ff,
+                0 0 40px #ff00ff;
+  }
+  50% {
+    box-shadow: 0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 40px #00ffff,
+                0 0 80px #00ffff;
+  }
+}
+
+.cyber-glitch {
+  position: relative;
+  animation: glitch 2s infinite;
+  font-family: monospace;
+}
+
+.cyber-glitch::before,
+.cyber-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cyber-glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 #ff00ff;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim 5s infinite linear alternate-reverse;
+}
+
+.cyber-glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 #00ffff;
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+.neon-text {
+  color: #fff;
+  text-shadow: 0 0 5px #fff,
+               0 0 10px #fff,
+               0 0 20px var(--neon-text-color),
+               0 0 40px var(--neon-text-color),
+               0 0 80px var(--neon-text-color);
+  animation: flicker 1.5s infinite alternate;
+}
+
+.cyber-box {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--neon-border-color);
+  box-shadow: 0 0 5px var(--neon-border-color),
+              inset 0 0 5px var(--neon-border-color);
+  animation: neon-border 1.5s infinite alternate;
+  backdrop-filter: blur(10px);
+}
+
+.cyber-gradient {
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+}
+
+.cyber-button {
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.cyber-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+.cyber-button:hover::before {
+  left: 100%;
+}
+
 /* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
+  background: #000;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(45deg, #00ffff, #ff00ff);
 }
