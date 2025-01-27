@@ -254,166 +254,176 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white">
+    <div className="fixed bottom-0 left-0 right-0">
       {/* 播放列表 */}
       {playerState.showPlaylist && (
-        <div className="absolute bottom-full w-full bg-gray-800 p-4 max-h-96 overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">播放列表</h3>
-            <button
-              onClick={() => setPlayerState(prev => ({ ...prev, showPlaylist: false }))}
-              className="p-2 hover:bg-gray-700 rounded-full"
-            >
-              <FaTimes />
-            </button>
-          </div>
-          <div className="space-y-2">
-            {defaultSongs.map(song => (
-              <div
-                key={song.id}
-                className={`flex items-center p-2 hover:bg-gray-700 cursor-pointer rounded ${
-                  song.id === playerState.currentSong?.id ? 'bg-gray-700' : ''
-                }`}
-                onClick={() => {
-                  setPlayerState(prev => ({ 
-                    ...prev, 
-                    currentSong: song,
-                    isPlaying: true
-                  }));
-                }}
+        <div className="absolute bottom-full w-full">
+          <div className="max-w-4xl mx-auto glass rounded-t-xl p-4 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold gradient-text">播放列表</h3>
+              <button
+                onClick={() => setPlayerState(prev => ({ ...prev, showPlaylist: false }))}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                <img src={song.cover} alt={song.title} className="w-10 h-10 rounded mr-3" />
-                <div>
-                  <div className="font-medium">{song.title}</div>
-                  <div className="text-sm text-gray-400">{song.artist}</div>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {defaultSongs.map(song => (
+                <div
+                  key={song.id}
+                  className={`flex items-center p-2 hover:bg-white/10 cursor-pointer rounded-lg transition-all hover-scale ${
+                    song.id === playerState.currentSong?.id ? 'bg-white/20' : ''
+                  }`}
+                  onClick={() => {
+                    setPlayerState(prev => ({ 
+                      ...prev, 
+                      currentSong: song,
+                      isPlaying: true
+                    }));
+                  }}
+                >
+                  <img src={song.cover} alt={song.title} className="w-12 h-12 rounded-lg mr-3 object-cover" />
+                  <div>
+                    <div className="font-medium">{song.title}</div>
+                    <div className="text-sm text-gray-400">{song.artist}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* 歌词显示 */}
       {playerState.showLyrics && (
-        <div className="absolute bottom-full w-full bg-gray-800 bg-opacity-90 p-4 max-h-96 overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">歌词</h3>
-            <button
-              onClick={() => setPlayerState(prev => ({ ...prev, showLyrics: false }))}
-              className="p-2 hover:bg-gray-700 rounded-full"
-            >
-              <FaTimes />
-            </button>
-          </div>
-          <div className="text-center space-y-2">
-            {parsedLyrics.map((lyric, index) => (
-              <div
-                key={index}
-                className={`py-1 ${
-                  lyric.text === currentLyric ? 'text-blue-400 font-bold' : 'text-gray-400'
-                }`}
+        <div className="absolute bottom-full w-full">
+          <div className="max-w-4xl mx-auto glass rounded-t-xl p-4 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold gradient-text">歌词</h3>
+              <button
+                onClick={() => setPlayerState(prev => ({ ...prev, showLyrics: false }))}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
               >
-                {lyric.text}
-              </div>
-            ))}
+                <FaTimes />
+              </button>
+            </div>
+            <div className="text-center space-y-2 max-h-64 overflow-y-auto">
+              {parsedLyrics.map((lyric, index) => (
+                <div
+                  key={index}
+                  className={`py-1 transition-all ${
+                    lyric.text === currentLyric 
+                      ? 'text-blue-400 font-bold scale-110' 
+                      : 'text-gray-400'
+                  }`}
+                >
+                  {lyric.text}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="flex items-center justify-between">
-          {/* Song Info */}
-          <div className="flex items-center space-x-4">
-            {playerState.currentSong?.cover && (
-              <img
-                src={playerState.currentSong.cover}
-                alt={playerState.currentSong.title}
-                className="w-16 h-16 rounded-lg"
+      <div className="glass backdrop-blur-md shadow-2xl">
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="flex items-center justify-between">
+            {/* Song Info */}
+            <div className="flex items-center space-x-4">
+              {playerState.currentSong?.cover && (
+                <img
+                  src={playerState.currentSong.cover}
+                  alt={playerState.currentSong.title}
+                  className="w-16 h-16 rounded-lg shadow-lg hover-scale"
+                />
+              )}
+              <div>
+                <h3 className="font-semibold text-lg gradient-text">
+                  {playerState.currentSong?.title || 'No song selected'}
+                </h3>
+                <p className="text-gray-400">{playerState.currentSong?.artist}</p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={handlePlayModeChange}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                title={`当前模式: ${playerState.playMode}`}
+              >
+                {getPlayModeIcon()}
+              </button>
+              <button
+                onClick={handlePrev}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <FaStepBackward />
+              </button>
+              <button
+                onClick={togglePlay}
+                className="p-4 hover:bg-white/10 rounded-full transition-colors"
+              >
+                {playerState.isPlaying ? <FaPause className="text-xl" /> : <FaPlay className="text-xl" />}
+              </button>
+              <button
+                onClick={handleNext}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <FaStepForward />
+              </button>
+              <button
+                onClick={() => setPlayerState(prev => ({ ...prev, showPlaylist: !prev.showPlaylist }))}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                title="播放列表"
+              >
+                <FaList />
+              </button>
+              <button
+                onClick={() => setPlayerState(prev => ({ ...prev, showLyrics: !prev.showLyrics }))}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                title="歌词"
+              >
+                <FaMusic />
+              </button>
+            </div>
+
+            {/* Volume */}
+            <div className="flex items-center space-x-2">
+              <FaVolumeUp className="text-gray-400" />
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={playerState.volume}
+                onChange={(e) => {
+                  const newVolume = parseFloat(e.target.value);
+                  setPlayerState(prev => ({ ...prev, volume: newVolume }));
+                  if (audioRef.current) {
+                    audioRef.current.volume = newVolume;
+                  }
+                }}
+                className="w-24"
               />
-            )}
-            <div>
-              <h3 className="font-semibold">{playerState.currentSong?.title || 'No song selected'}</h3>
-              <p className="text-gray-400">{playerState.currentSong?.artist}</p>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center space-x-6">
-            <button
-              onClick={handlePlayModeChange}
-              className="p-2 hover:bg-gray-800 rounded-full"
-              title={`当前模式: ${playerState.playMode}`}
-            >
-              {getPlayModeIcon()}
-            </button>
-            <button
-              onClick={handlePrev}
-              className="p-2 hover:bg-gray-800 rounded-full"
-            >
-              <FaStepBackward />
-            </button>
-            <button
-              onClick={togglePlay}
-              className="p-3 hover:bg-gray-800 rounded-full"
-            >
-              {playerState.isPlaying ? <FaPause /> : <FaPlay />}
-            </button>
-            <button
-              onClick={handleNext}
-              className="p-2 hover:bg-gray-800 rounded-full"
-            >
-              <FaStepForward />
-            </button>
-            <button
-              onClick={() => setPlayerState(prev => ({ ...prev, showPlaylist: !prev.showPlaylist }))}
-              className="p-2 hover:bg-gray-800 rounded-full"
-              title="播放列表"
-            >
-              <FaList />
-            </button>
-            <button
-              onClick={() => setPlayerState(prev => ({ ...prev, showLyrics: !prev.showLyrics }))}
-              className="p-2 hover:bg-gray-800 rounded-full"
-              title="歌词"
-            >
-              <FaMusic />
-            </button>
-          </div>
-
-          {/* Volume */}
-          <div className="flex items-center space-x-2">
-            <FaVolumeUp />
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={playerState.volume}
-              onChange={(e) => {
-                const newVolume = parseFloat(e.target.value);
-                setPlayerState(prev => ({ ...prev, volume: newVolume }));
-                if (audioRef.current) {
-                  audioRef.current.volume = newVolume;
-                }
-              }}
-              className="w-24"
-            />
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-4">
-          <div className="bg-gray-700 h-1 rounded-full">
-            <div
-              className="bg-blue-500 h-1 rounded-full"
-              style={{
-                width: `${(playerState.progress / playerState.duration) * 100}%`
-              }}
-            />
-          </div>
-          <div className="flex justify-between text-sm mt-1">
-            <span>{Math.floor(playerState.progress)}s</span>
-            <span>{Math.floor(playerState.duration)}s</span>
+          {/* Progress Bar */}
+          <div className="mt-4">
+            <div className="bg-gray-700 h-1 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-1 rounded-full transition-all"
+                style={{
+                  width: `${(playerState.progress / playerState.duration) * 100}%`
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-sm mt-1 text-gray-400">
+              <span>{Math.floor(playerState.progress)}s</span>
+              <span>{Math.floor(playerState.duration)}s</span>
+            </div>
           </div>
         </div>
       </div>
