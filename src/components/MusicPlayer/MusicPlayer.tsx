@@ -7,6 +7,7 @@ import {
   FaTimes
 } from 'react-icons/fa';
 import { Song, PlayerState, PlayMode, ParsedLyric } from './types';
+import DancingStickman from '../DancingStickman/DancingStickman';
 
 const defaultSongs: Song[] = [
   {
@@ -325,6 +326,8 @@ export default function MusicPlayer() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0">
+      <DancingStickman isPlaying={playerState.isPlaying} />
+      
       {/* 播放列表 */}
       {playerState.showPlaylist && (
         <div className="absolute bottom-full w-full">
