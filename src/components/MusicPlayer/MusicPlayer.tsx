@@ -167,6 +167,48 @@ export default function MusicPlayer() {
     setPlayerState(prev => ({ ...prev, playMode: nextMode }));
   };
 
+  // 监听当前歌曲变化
+  useEffect(() => {
+    if (!audioRef.current || !playerState.currentSong) return;
+
+    // 重置进度
+    audioRef.current.currentTime = 0;
+    
+    // 设置新的音频源
+    audioRef.current.src = playerState.currentSong.url;
+    
+    // 加载新的音频
+    audioRef.current.load();
+    
+    // 如果是播放状态，则开始播放
+    if (playerState.isPlaying) {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Error playing audio:', error);
+          setPlayerState(prev => ({ ...prev, isPlaying: false }));
+        });
+      }
+    }
+  }, [playerState.currentSong?.url]);
+
+  // 监听播放状态变化
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (playerState.isPlaying) {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Error playing audio:', error);
+          setPlayerState(prev => ({ ...prev, isPlaying: false }));
+        });
+      }
+    } else {
+      audioRef.current.pause();
+    }
+  }, [playerState.isPlaying]);
+
   // 获取下一首歌
   const getNextSong = useCallback(() => {
     const currentIndex = defaultSongs.findIndex(song => song.id === playerState.currentSong?.id);
@@ -316,24 +358,6 @@ export default function MusicPlayer() {
     };
   }, [playerState.playMode, getNextSong, parsedLyrics]);
 
-  const togglePlay = async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    try {
-      if (audio.paused) {
-        console.log('Playing audio...');
-        await audio.play();
-      } else {
-        console.log('Pausing audio...');
-        audio.pause();
-      }
-    } catch (error) {
-      console.error('Error toggling audio:', error);
-      alert('播放出错，请稍后再试');
-    }
-  };
-
   const handleNext = () => {
     if (!playerState.currentSong) return;
     
@@ -343,32 +367,21 @@ export default function MusicPlayer() {
     
     let nextIndex;
     if (playerState.playMode === 'shuffle') {
-      // 随机模式下，随机选择一首不同的歌
       do {
         nextIndex = Math.floor(Math.random() * defaultSongs.length);
       } while (nextIndex === currentIndex && defaultSongs.length > 1);
     } else {
-      // 顺序播放或循环模式下，选择下一首歌
       nextIndex = (currentIndex + 1) % defaultSongs.length;
     }
-    
-    // 保持当前的播放状态
+
     const wasPlaying = playerState.isPlaying;
     
     setPlayerState(prev => ({
       ...prev,
       currentSong: defaultSongs[nextIndex],
       progress: 0,
-      isPlaying: wasPlaying // 保持播放状态不变
+      isPlaying: wasPlaying
     }));
-
-    // 如果正在播放，确保新的音频开始播放
-    if (wasPlaying && audioRef.current) {
-      audioRef.current.play().catch(error => {
-        console.error('Error playing audio:', error);
-        setPlayerState(prev => ({ ...prev, isPlaying: false }));
-      });
-    }
   };
 
   const handlePrev = () => {
@@ -380,32 +393,30 @@ export default function MusicPlayer() {
     
     let prevIndex;
     if (playerState.playMode === 'shuffle') {
-      // 随机模式下，随机选择一首不同的歌
       do {
         prevIndex = Math.floor(Math.random() * defaultSongs.length);
       } while (prevIndex === currentIndex && defaultSongs.length > 1);
     } else {
-      // 顺序播放或循环模式下，选择上一首歌
       prevIndex = (currentIndex - 1 + defaultSongs.length) % defaultSongs.length;
     }
-    
-    // 保持当前的播放状态
+
     const wasPlaying = playerState.isPlaying;
     
     setPlayerState(prev => ({
       ...prev,
       currentSong: defaultSongs[prevIndex],
       progress: 0,
-      isPlaying: wasPlaying // 保持播放状态不变
+      isPlaying: wasPlaying
     }));
+  };
 
-    // 如果正在播放，确保新的音频开始播放
-    if (wasPlaying && audioRef.current) {
-      audioRef.current.play().catch(error => {
-        console.error('Error playing audio:', error);
-        setPlayerState(prev => ({ ...prev, isPlaying: false }));
-      });
-    }
+  const togglePlay = () => {
+    if (!playerState.currentSong) return;
+    
+    setPlayerState(prev => ({
+      ...prev,
+      isPlaying: !prev.isPlaying
+    }));
   };
 
   const getPlayModeIcon = () => {
