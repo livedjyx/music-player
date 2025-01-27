@@ -11,36 +11,33 @@ import { Song, PlayerState, PlayMode, ParsedLyric } from './types';
 const defaultSongs: Song[] = [
   {
     id: '1',
-    title: 'A New Beginning',
-    artist: 'Bensound',
-    url: 'https://www.bensound.com/bensound-music/bensound-anewbeginning.mp3',
+    title: 'Forest Lullaby',
+    artist: 'Lesfm',
+    url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
     cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200',
-    lyrics: `[00:00.00]这是示例歌词
-[00:03.00]A New Beginning
-[00:06.00]By Bensound
-[00:09.00]纯音乐，请欣赏...`
+    lyrics: `[00:00.00]Forest Lullaby
+[00:03.00]By Lesfm
+[00:06.00]纯音乐，请欣赏...`
   },
   {
     id: '2',
-    title: 'Creative Minds',
-    artist: 'Bensound',
-    url: 'https://www.bensound.com/bensound-music/bensound-creativeminds.mp3',
+    title: 'Summer Walk',
+    artist: 'Olexy',
+    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
     cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200',
-    lyrics: `[00:00.00]这是示例歌词
-[00:03.00]Creative Minds
-[00:06.00]By Bensound
-[00:09.00]纯音乐，请欣赏...`
+    lyrics: `[00:00.00]Summer Walk
+[00:03.00]By Olexy
+[00:06.00]纯音乐，请欣赏...`
   },
   {
     id: '3',
-    title: 'Acoustic Breeze',
-    artist: 'Bensound',
-    url: 'https://www.bensound.com/bensound-music/bensound-acousticbreeze.mp3',
+    title: 'Good Night',
+    artist: 'FASSounds',
+    url: 'https://cdn.pixabay.com/download/audio/2022/04/27/audio_2449b4c52d.mp3',
     cover: 'https://images.unsplash.com/photo-1517230878791-4d28214057c2?w=200',
-    lyrics: `[00:00.00]这是示例歌词
-[00:03.00]Acoustic Breeze
-[00:06.00]By Bensound
-[00:09.00]纯音乐，请欣赏...`
+    lyrics: `[00:00.00]Good Night
+[00:03.00]By FASSounds
+[00:06.00]纯音乐，请欣赏...`
   }
 ];
 
