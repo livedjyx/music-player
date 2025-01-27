@@ -38,6 +38,76 @@ const defaultSongs: Song[] = [
     lyrics: `[00:00.00]Good Night
 [00:03.00]By FASSounds
 [00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '4',
+    title: 'Lofi Study',
+    artist: 'FASSounds',
+    url: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_1808fb3f7f.mp3',
+    cover: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=200',
+    lyrics: `[00:00.00]Lofi Study
+[00:03.00]By FASSounds
+[00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '5',
+    title: 'Ambient Piano',
+    artist: 'SergeQuadrado',
+    url: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_1c2c59d04a.mp3',
+    cover: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=200',
+    lyrics: `[00:00.00]Ambient Piano
+[00:03.00]By SergeQuadrado
+[00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '6',
+    title: 'Chill Lofi',
+    artist: 'Coma-Media',
+    url: 'https://cdn.pixabay.com/download/audio/2022/08/02/audio_2dde668d05.mp3',
+    cover: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=200',
+    lyrics: `[00:00.00]Chill Lofi
+[00:03.00]By Coma-Media
+[00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '7',
+    title: 'Inspiring Cinematic',
+    artist: 'Music_Unlimited',
+    url: 'https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc7c1d47.mp3',
+    cover: 'https://images.unsplash.com/photo-1446057032654-9d8885db76c6?w=200',
+    lyrics: `[00:00.00]Inspiring Cinematic
+[00:03.00]By Music_Unlimited
+[00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '8',
+    title: 'Beautiful Dream',
+    artist: 'Lesfm',
+    url: 'https://cdn.pixabay.com/download/audio/2023/06/13/audio_7cab75799f.mp3',
+    cover: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=200',
+    lyrics: `[00:00.00]Beautiful Dream
+[00:03.00]By Lesfm
+[00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '9',
+    title: 'Relaxing Jazz',
+    artist: 'Ashot-Danielyan',
+    url: 'https://cdn.pixabay.com/download/audio/2023/06/13/audio_d2fde21ea6.mp3',
+    cover: 'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=200',
+    lyrics: `[00:00.00]Relaxing Jazz
+[00:03.00]By Ashot-Danielyan
+[00:06.00]纯音乐，请欣赏...`
+  },
+  {
+    id: '10',
+    title: 'Meditation',
+    artist: 'SergePavkinMusic',
+    url: 'https://cdn.pixabay.com/download/audio/2023/03/28/audio_6aa2c4ef4d.mp3',
+    cover: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=200',
+    lyrics: `[00:00.00]Meditation
+[00:03.00]By SergePavkinMusic
+[00:06.00]纯音乐，请欣赏...`
   }
 ];
 
